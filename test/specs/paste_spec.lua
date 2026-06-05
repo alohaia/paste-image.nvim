@@ -1,5 +1,5 @@
-local clip_setup = require("clipboard-image").setup
-local paste_img = require("clipboard-image.paste").paste_img
+local clip_setup = require("paste-image").setup
+local paste_img = require("paste-image.paste").paste_img
 
 describe("this plugin", function()
   it("should paste correctly with the default setup", function()
