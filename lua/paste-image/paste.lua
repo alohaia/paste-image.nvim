@@ -10,7 +10,9 @@ local paste_img_to = function(path)
     cmd_paste:run():save_result(path, true)
 end
 
-M.paste_img = function(opts)
+---@param opts table
+---@param fallback function?
+M.paste_img = function(opts, fallback)
     local is_dep_exist, deps_msg = check_dependency()
     if not is_dep_exist then
         vim.notify(deps_msg, vim.log.levels.ERROR)
@@ -19,7 +21,11 @@ M.paste_img = function(opts)
 
     local content = utils.get_clip_content(cmd_check)
     if utils.is_clipboard_img(content) ~= true then
-        vim.notify("There is no image data in clipboard", vim.log.levels.ERROR)
+        if fallback then
+            fallback()
+        else
+            vim.notify("There is no image data in clipboard", vim.log.levels.ERROR)
+        end
     else
         local conf_toload = conf_utils.get_usable_config()
         conf_toload = conf_utils.merge_config(conf_toload, opts)
