@@ -2,13 +2,20 @@ local M = {}
 
 M.config = {
     default = {
-        img_dir = "img",
-        img_dir_txt = "img",
         img_name = function()
-            return os.date "%Y-%m-%d-%H-%M-%S"
+            return os.date("%Y-%m-%d_%H-%M-%S") .. "_" .. tostring(vim.loop.hrtime() % 1e6)
         end,
+        img_dir = function()
+            local file = vim.api.nvim_buf_get_name(0)
+            local dir = vim.fn.fnamemodify(file, ":h")
+            local asset_dir = vim.fn.fnamemodify(file, ":t") .. ".assets"
+            return {dir, asset_dir}
+        end,
+        rel_dir = function()
+            return vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":h")
+        end,
+        affix = "![{name}]({relpath})",
         img_handler = function(img) end,
-        affix = "%s",
     },
     asciidoc = {
         affix = "image::%s[]",
@@ -61,7 +68,7 @@ M.load_config = function(config_toload)
         affix = M.load_opt(config_toload.affix),
         img_name = M.load_opt(config_toload.img_name),
         img_dir = M.load_opt(config_toload.img_dir),
-        img_dir_txt = M.load_opt(config_toload.img_dir_txt),
+        rel_dir = M.load_opt(config_toload.rel_dir),
         img_handler = config_toload.img_handler,
     }
 end

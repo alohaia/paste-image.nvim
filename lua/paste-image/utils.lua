@@ -74,13 +74,14 @@ local function format_named(template, vars)
 end
 
 ---@param target string
----@param current string?
+---@param current string? dir or file that target is relative to
 ---@return string|nil
 M.rel_path = function(target, current)
-    current = current or vim.api.nvim_buf_get_name(0)
+    current = M.resolve_dir(current) or vim.api.nvim_buf_get_name(0)
+    local stat = vim.uv.fs_stat(current) or {}
 
     return vim.fs.relpath(
-        vim.fs.dirname(current),
+        stat.type == "directory" and current or vim.fs.dirname(current),
         target
     )
 end
@@ -201,6 +202,7 @@ end
 M.create_dir = function(dir)
     dir = M.resolve_dir(dir)
     if vim.fn.isdirectory(dir) == 0 then
+        vim.notify("[paste-image.nvim] Create dir: " .. dir)
         vim.fn.mkdir(dir, "p")
     end
 end
@@ -210,6 +212,8 @@ end
 ---@param is_txt? boolean
 ---@return string img_path
 M.get_img_path = function(dir, img_name, is_txt)
+    is_txt = is_txt ~= nil and is_txt or false
+
     local this_os = M.get_os()
     local img = img_name .. ".png"
 
@@ -218,11 +222,12 @@ M.get_img_path = function(dir, img_name, is_txt)
         return img
     end
 
-    if this_os == "Windows" and is_txt ~= "txt" then
+    if this_os == "Windows" and is_txt then
         dir = M.resolve_dir(dir, "\\")
     else
         dir = M.resolve_dir(dir)
     end
+
     return dir .. img
 end
 
@@ -231,7 +236,7 @@ end
 ---TODO: Probably need better description
 ---@param affix string
 ---@param image table
-M.insert_txt = function(affix, image)
+M.insert_img_txt = function(affix, image)
     local txt_topaste = format_named(affix, image)
 
     ---Convert txt_topaste to lines table so it can handle multiline string
@@ -240,11 +245,7 @@ M.insert_txt = function(affix, image)
         table.insert(lines, line)
     end
 
-    if M.is_insert_mode() then
-        vim.api.nvim_put(lines, "c", false, true)
-    else
-        vim.api.nvim_put(lines, "c", true, true)
-    end
+    vim.api.nvim_put(lines, "c", M.is_insert_mode() == false, true)
 end
 
 return M

@@ -29,27 +29,25 @@ M.paste_img = function(opts, fallback)
     else
         local conf_toload = conf_utils.get_usable_config()
         conf_toload = conf_utils.merge_config(conf_toload, opts)
-
         local conf = conf_utils.load_config(conf_toload)
+
         local path = utils.get_img_path(conf.img_dir, conf.img_name)
-        local path_txt = utils.get_img_path(conf.img_dir_txt, conf.img_name, true)
 
         utils.create_dir(conf.img_dir)
         paste_img_to(path)
 
-        vim.notify(utils.rel_path(path_txt))
-
-        utils.insert_txt(conf.affix, {
+        local image = {
             name = conf.img_name,
-            abspath = path_txt,
-            relpath = utils.rel_path(path_txt)
-        })
+            dir = conf.img_dir,
+            abspath = path,
+            rel_dir = conf.rel_dir or "nil",
+            relpath = utils.rel_path(path, conf.rel_dir) or "nil",
+        }
+
+        utils.insert_img_txt(conf.affix, image)
 
         if type(conf.img_handler) == "function" then
-            conf.img_handler {
-                name = conf.img_name,
-                path = path,
-            }
+            conf.img_handler(image)
         end
     end
 end
